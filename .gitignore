@@ -1,0 +1,50 @@
+# Ignore build artifacts and user-specific files
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+*.userprefs
+*.log
+
+# Ignore Visual Studio files
+.vs/
+.vscode/
+.vscodeignore
+
+# Ignore JetBrains Rider files
+.idea/
+
+# Ignore Mono auto-generated files
+mono_crash.*
+
+# Ignore Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Ignore folder config files
+Desktop.ini
+
+# Ignore Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Ignore Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+*.mst
+
+# Ignore Windows shortcuts
+*.lnk
+
+# Ignore NuGet packages and cache
+packages/
+*.nupkg
+*.paket.restore.log
+
+# Keep packages.config file
+!packages.config
