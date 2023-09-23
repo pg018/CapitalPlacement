@@ -32,10 +32,12 @@ var builder = Host.CreateDefaultBuilder(args)
         services.AddScoped(typeof(ICosmosService<>), typeof(CosmosService<>));
         services.AddScoped<ICommonService, CommonService>();
         services.AddScoped<IApplicationFormService, ApplicationFormService>();
+        services.AddScoped<IWorkflowService, WorkflowService>();
 
         // controller services...
         services.AddScoped<ProgramDetailsController>();
         services.AddScoped<AppFormController>();
+        services.AddScoped<WorkflowController>();
     });
 
 var host = builder.Build();
@@ -67,11 +69,16 @@ while (true)
                 var appInfoController = host.Services.GetRequiredService<AppFormController>();
                 await appInfoController.HandleRequest(request, response);
                 break;
+            case "/workflow":
+                Console.WriteLine("Entering Workflow Controller");
+                var workflowController = host.Services.GetRequiredService<WorkflowController>();
+                await workflowController.HandleRequest(request, response);
+                break;
         }
     }
     catch (KeyNotFoundException ex)
     {
-        Console.WriteLine("Key Not Found");
+        Console.WriteLine("Key Not Found => Happens when parsing something in json but expected key not found");
         Console.WriteLine(ex.ToString());
         await _commonService.SendResponse(
             HttpStatusCode.BadRequest,
@@ -79,15 +86,21 @@ while (true)
     }
     catch (JsonException ex) when (ex.InnerException is FormatException)
     {
-        Console.WriteLine("Format Exception");
+        Console.WriteLine("Format Exception => Error in JSON Formatting");
         Console.WriteLine(ex.ToString());
         await _commonService.SendResponse(HttpStatusCode.BadRequest, "Invalid JSON Format",response, true);
     }
     catch (JsonException ex)
     {
-        Console.WriteLine("JSON Exception");
+        Console.WriteLine("JSON Exception => Error in JSON Structure");
         Console.WriteLine(ex.ToString());
         await _commonService.SendResponse(HttpStatusCode.BadRequest, "Please Check JSON Format", response, true);
+    }
+    catch (InvalidOperationException ex)
+    {
+        Console.WriteLine("Invalid Operation => the attribute in other type than expected");
+        Console.WriteLine(ex.ToString());
+        await _commonService.SendResponse(HttpStatusCode.BadRequest, "Invalid Operation", response, true);
     }
     catch (Exception ex) 
     {
