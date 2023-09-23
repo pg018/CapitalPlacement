@@ -21,6 +21,6 @@ namespace CapitalPlacement.CoreLevel.DTO.ApplicationFormDTO
         public AppProfileInfoDTO ProfileInfo { get; set; }
 
         [ObjectAttributeValidator("Additional Questions", true)]
-        public List<BaseQuestionDTO> AdditionalQuestions {  get; set; }
+        public List<BaseQuestionDTO> AdditionalQuestions { get; set; } = new List<BaseQuestionDTO>();
     }
 }

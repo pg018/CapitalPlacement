@@ -1,4 +1,5 @@
 ﻿
+using CapitalPlacement.CoreLevel.DTO.ApplicationFormDTO;
 using CapitalPlacement.CoreLevel.DTO.ApplicationFormDTO.AdditionalQuestions;
 using CapitalPlacement.CoreLevel.Enums;
 using CapitalPlacement.CoreLevel.ServiceContracts;
@@ -23,7 +24,55 @@ namespace CapitalPlacement.CoreLevel.Services
             return questionTypes;
         }
 
-        public List<BaseQuestionDTO> GetFinalAdditionalQuestionsList(string additionalQuestionsJson)
+        public IncomingAppInfoDTO? GetFinalIncomingDTO(string requestBody)
+        {
+            /*
+             Initially when object is parsed from string, the properties of various questions are lost...
+             In order to retrieve those properties, we extract them from string and then add it to the final
+             object that is validated
+             */
+            JsonDocument jsonDocument = JsonDocument.Parse(requestBody);
+            JsonElement additionalQuestionsElementPersonal,
+                additionalQuestionsElementProfile,
+                additionalQuestionsElementSolo;
+            // getting the additional questions property from personal info
+            jsonDocument.RootElement
+                .GetProperty("PersonalInfo")
+                .TryGetProperty("AdditionalQuestions", out additionalQuestionsElementPersonal);
+            // getting the additional questions property from profile info
+            jsonDocument.RootElement
+                .GetProperty("ProfileInfo")
+                .TryGetProperty("AdditionalQuestions", out additionalQuestionsElementProfile);
+            // getting the additional questions property from main info
+            jsonDocument.RootElement
+                .TryGetProperty("AdditionalQuestions", out additionalQuestionsElementSolo);
+            var additionalQuestionsPersonalString = additionalQuestionsElementPersonal.ToString();
+            var additionalQuestionsProfileString = additionalQuestionsElementProfile.ToString();
+            var additionalQuestionsSoloString = additionalQuestionsElementSolo.ToString();
+            // deserializing to json object
+            var jsonObject = JsonSerializer.Deserialize<IncomingAppInfoDTO>(requestBody);
+
+            // checking if not empty string to evaluate that object exists
+            if (additionalQuestionsPersonalString != string.Empty)
+            {
+                var personalFinalList = GetFinalAdditionalQuestionsList(additionalQuestionsPersonalString);
+                jsonObject!.PersonalInfo!.AdditionalQuestions = personalFinalList;
+            }
+            if (additionalQuestionsProfileString != string.Empty)
+            {
+                var profileFinalList = GetFinalAdditionalQuestionsList(additionalQuestionsProfileString);
+                jsonObject!.ProfileInfo!.AdditionalQuestions = profileFinalList;
+            }
+            if (additionalQuestionsSoloString != string.Empty)
+            {
+                var soloFinalList = GetFinalAdditionalQuestionsList(additionalQuestionsSoloString);
+                jsonObject!.AdditionalQuestions = soloFinalList;
+            }
+
+            return jsonObject;
+        }
+
+        private List<BaseQuestionDTO> GetFinalAdditionalQuestionsList(string additionalQuestionsJson)
         {
             List<BaseQuestionDTO> finalList = new();
             Console.WriteLine("Starting the parsing of json string to get the questions");

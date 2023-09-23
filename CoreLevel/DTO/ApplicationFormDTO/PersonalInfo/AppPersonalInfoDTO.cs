@@ -24,6 +24,6 @@ namespace CapitalPlacement.CoreLevel.DTO.ApplicationFormDTO.PersonalInfo
         public AppPersonalInfoItemDTO Gender { get; set; }
 
         [ObjectAttributeValidator("Additional Questions", true)]
-        public List<BaseQuestionDTO> AdditionalQuestions {  get; set; }
+        public List<BaseQuestionDTO> AdditionalQuestions { get; set; } = new List<BaseQuestionDTO>();
     }
 }

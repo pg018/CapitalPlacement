@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Net;
+using System.Text.Json;
 
 var builder = Host.CreateDefaultBuilder(args)
     .ConfigureServices((_, services) =>
@@ -30,9 +31,11 @@ var builder = Host.CreateDefaultBuilder(args)
         // All application wide services
         services.AddScoped(typeof(ICosmosService<>), typeof(CosmosService<>));
         services.AddScoped<ICommonService, CommonService>();
+        services.AddScoped<IApplicationFormService, ApplicationFormService>();
 
         // controller services...
         services.AddScoped<ProgramDetailsController>();
+        services.AddScoped<AppFormController>();
     });
 
 var host = builder.Build();
@@ -45,6 +48,7 @@ Console.Write("Listening to Incoming Requests...");
 
 while (true)
 {
+    var _commonService = host.Services.GetRequiredService<ICommonService>();
     var context = await listener.GetContextAsync();
     var request = context.Request;
     var response = context.Response;
@@ -58,10 +62,40 @@ while (true)
                 var programDetailsController = host.Services.GetRequiredService<ProgramDetailsController>();
                 await programDetailsController.HandleRequest(request, response);
                 break;
+            case "/applicationform":
+                Console.WriteLine("Entering Application Form Controller");
+                var appInfoController = host.Services.GetRequiredService<AppFormController>();
+                await appInfoController.HandleRequest(request, response);
+                break;
         }
-    } catch (Exception ex) 
+    }
+    catch (KeyNotFoundException ex)
     {
+        Console.WriteLine("Key Not Found");
         Console.WriteLine(ex.ToString());
+        await _commonService.SendResponse(
+            HttpStatusCode.BadRequest,
+            "Properties in JSON are Missing", response, true);
+    }
+    catch (JsonException ex) when (ex.InnerException is FormatException)
+    {
+        Console.WriteLine("Format Exception");
+        Console.WriteLine(ex.ToString());
+        await _commonService.SendResponse(HttpStatusCode.BadRequest, "Invalid JSON Format",response, true);
+    }
+    catch (JsonException ex)
+    {
+        Console.WriteLine("JSON Exception");
+        Console.WriteLine(ex.ToString());
+        await _commonService.SendResponse(HttpStatusCode.BadRequest, "Please Check JSON Format", response, true);
+    }
+    catch (Exception ex) 
+    {
+        Console.WriteLine("General Exception");
+        Console.WriteLine(ex.ToString());
+        await _commonService.SendResponse(
+            HttpStatusCode.InternalServerError,
+            "Internal Server Error", response, true);
     }
 
     response.Close();
