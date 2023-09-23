@@ -1,4 +1,5 @@
 ﻿using CapitalPlacement.CoreLevel.DTO.WorkflowDTO;
+using CapitalPlacement.CoreLevel.Models;
 using CapitalPlacement.CoreLevel.Models.AppInfoAllModel;
 using CapitalPlacement.CoreLevel.Models.WorkflowAllModel;
 
@@ -6,20 +7,35 @@ namespace CapitalPlacement.CoreLevel.ModelExtensions.cs
 {
     public static class WorkflowExtensions
     {
-        public static WorkflowModel ConvertDTOToModel(this IncomingWorkflowDTO dtoObject, WorkflowModel prevWorkFlowModel)
+        public static NewApplicationFormModel ConvertDTOToModel(this IncomingWorkflowDTO dtoObject, NewApplicationFormModel prevWorkFlowModel)
         {
-            var finalList = prevWorkFlowModel.WorkflowStages.ToList();
+            var finalList = prevWorkFlowModel.WorkflowStages;
+            var listCount = 0;
+            if (finalList != null)
+            {
+                listCount = finalList.Count;
+            } else
+            {
+                finalList = new List<WorkflowSingleStageModel>();
+            }
             WorkflowSingleStageModel newStage = new()
             {
                 StageName = dtoObject.StageItem.StageName,
                 StageType = dtoObject.StageItem.StageType,
                 HideFromCandidate = dtoObject.StageItem.HideFromCandidate,
-                Order = finalList.Count + 1,
+                Order = listCount + 1,
             };
             finalList.Add(newStage);
-            return new WorkflowModel()
+            prevWorkFlowModel.WorkflowStages = finalList;
+            return prevWorkFlowModel;
+        }
+
+        public static OutgoingWorkflowDTO GetOutgoingWorkflowFromModel(this NewApplicationFormModel modelObj)
+        {
+            return new OutgoingWorkflowDTO
             {
-                WorkflowStages = finalList
+                documentId = modelObj.id,
+                StageList = modelObj.WorkflowStages
             };
         }
     }

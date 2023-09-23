@@ -10,9 +10,9 @@ namespace CapitalPlacement.CoreLevel.ModelExtensions.cs
 {
     public static class AppInfoModelExtension
     {
-        public static AppInfoModel ConvertDTOToModel(
+        public static NewApplicationFormModel ConvertDTOToModel(
             this IncomingAppInfoDTO dtoObject,
-            ProgramDetailsModel programDetailsModel)
+            NewApplicationFormModel applicationModel)
         {
             AppPersonalInfoModel finalPersonalObj = new AppPersonalInfoModel
             {
@@ -27,21 +27,16 @@ namespace CapitalPlacement.CoreLevel.ModelExtensions.cs
                 Gender = dtoObject.PersonalInfo.Gender,
                 AdditionalQuestions = dtoObject.PersonalInfo.AdditionalQuestions,
             };
+            applicationModel.CoverImage = dtoObject.CoverImage;
+            applicationModel.PersonalInfo = finalPersonalObj;
+            applicationModel.ProfileInfo = dtoObject.ProfileInfo;
+            applicationModel.AdditionalQuestions = dtoObject.AdditionalQuestions;
 
-            return new AppInfoModel
-            {
-                id = programDetailsModel.id,
-                ProgramInfo = programDetailsModel.ProgramInfo,
-                AdditionalProgramInfo = programDetailsModel.AdditionalProgramInfo,
-                CoverImage = dtoObject.CoverImage,
-                PersonalInfo = finalPersonalObj,
-                ProfileInfo = dtoObject.ProfileInfo,
-                AdditionalQuestions = dtoObject.AdditionalQuestions,
-            };
+            return applicationModel;
         }
 
-        public static OutgoingAppInfoDTO ConvertModelToOutgoing(
-            this AppInfoModel modelObj,
+        public static OutgoingAppInfoDTO ConvertModelToOutgoingAppInfo(
+            this NewApplicationFormModel modelObj,
             List<QuestionTypeMapping> questionTypes)
         {
             

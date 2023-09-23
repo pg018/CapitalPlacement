@@ -13,20 +13,17 @@ namespace CapitalPlacement.Controllers
     public class AppFormController
     {
         private readonly ICommonService _commonService;
-        private readonly ICosmosService<ProgramDetailsModel> _progDetailsCosmos;
-        private readonly ICosmosService<AppInfoModel> _appInfoCosmos;
+        private readonly ICosmosService<NewApplicationFormModel> _applicationCosmosService;
         private readonly IApplicationFormService _applicationFormService;
 
         public AppFormController(
             ICommonService commonService,
-            ICosmosService<AppInfoModel> appInfoCosmos,
-            ICosmosService<ProgramDetailsModel> progDetailsCosmos,
+            ICosmosService<NewApplicationFormModel> applicationCosmosService,
             IApplicationFormService applicationFormService)
         {
             _commonService = commonService;
-            _appInfoCosmos = appInfoCosmos;
-            _progDetailsCosmos = progDetailsCosmos;
             _applicationFormService = applicationFormService;
+            _applicationCosmosService = applicationCosmosService;
         }
 
         public async Task HandleRequest(HttpListenerRequest request, HttpListenerResponse response)
@@ -56,7 +53,7 @@ namespace CapitalPlacement.Controllers
                 await _commonService.SendResponse(HttpStatusCode.BadRequest, "Invalid Id!", response, true);
                 return;
             }
-            var retrievedDocument = await _appInfoCosmos.GetByIdAsync(documentId);
+            var retrievedDocument = await _applicationCosmosService.GetByIdAsync(documentId);
             if (retrievedDocument == null)
             {
                 // no such document exists
@@ -66,7 +63,7 @@ namespace CapitalPlacement.Controllers
 
             // sending the data that is required for application form only
             var questionTypeList = _applicationFormService.GetQuestionTypesList();
-            var finalDocument = AppInfoModelExtension.ConvertModelToOutgoing(retrievedDocument, questionTypeList);
+            var finalDocument = AppInfoModelExtension.ConvertModelToOutgoingAppInfo(retrievedDocument, questionTypeList);
 
             // here the outgoing document is same as the model so returning the model itself...
             var finalString = JsonSerializer.Serialize(finalDocument);
@@ -88,7 +85,7 @@ namespace CapitalPlacement.Controllers
             }
             Console.WriteLine("All Testing Passed");
             // retrieving the document if there in db
-            var dbDocument = await _progDetailsCosmos.GetByIdAsync(jsonObject.id);
+            var dbDocument = await _applicationCosmosService.GetByIdAsync(jsonObject.id);
             if (dbDocument == null)
             {
                 // document does not exist... Someone must have tampered with id in frontend
@@ -96,7 +93,7 @@ namespace CapitalPlacement.Controllers
                 return;
             }
             var finalDocument = AppInfoModelExtension.ConvertDTOToModel(jsonObject, dbDocument);
-            await _appInfoCosmos.ReplaceItemAsync(finalDocument);
+            await _applicationCosmosService.ReplaceItemAsync(finalDocument);
             await Task.CompletedTask;
         }
     }

@@ -12,14 +12,14 @@ namespace CapitalPlacement.Controllers
     public class ProgramDetailsController
     {
         private readonly ICommonService _commonService;
-        private readonly ICosmosService<ProgramDetailsModel> _progDetailsCosmos;
+        private readonly ICosmosService<NewApplicationFormModel> _applicationCosmosService;
 
         public ProgramDetailsController(
             ICommonService commonService,
-            ICosmosService<ProgramDetailsModel> progDetailsCosmos)
+            ICosmosService<NewApplicationFormModel> applicationCosmosService)
         {
             _commonService = commonService;
-            _progDetailsCosmos = progDetailsCosmos;
+            _applicationCosmosService = applicationCosmosService;
         }
 
         public async Task HandleRequest(HttpListenerRequest request, HttpListenerResponse response)
@@ -69,7 +69,7 @@ namespace CapitalPlacement.Controllers
                 await _commonService.SendResponse(HttpStatusCode.BadRequest, "Invalid Id!", response, true);
                 return;
             }
-            var retrievedDocument = await _progDetailsCosmos.GetByIdAsync(documentId);
+            var retrievedDocument = await _applicationCosmosService.GetByIdAsync(documentId);
             if (retrievedDocument == null) 
             {
                 // no such document exists
@@ -77,7 +77,7 @@ namespace CapitalPlacement.Controllers
                 return;
             }
             // here the outgoing document is same as the model so returning the model itself...
-            var finalString = JsonSerializer.Serialize(retrievedDocument);
+            var finalString = JsonSerializer.Serialize(retrievedDocument.GetOutgoingProgramDetailsFromModel());
             await _commonService.SendResponse(HttpStatusCode.OK, finalString, response);
             await Task.CompletedTask;
         }
@@ -100,7 +100,7 @@ namespace CapitalPlacement.Controllers
             Console.WriteLine("All Testing Passed");
             var finalDocument = ProgramDetailsModelExtension.ConvertIncomingDTOToModel(jsonObject, true);
             Console.WriteLine(finalDocument.id);
-            await _progDetailsCosmos.CreateItemAsync(finalDocument);
+            await _applicationCosmosService.CreateItemAsync(finalDocument);
             response.StatusCode = (int)HttpStatusCode.Created;
             await Task.CompletedTask;
         }
@@ -123,9 +123,15 @@ namespace CapitalPlacement.Controllers
                 return; 
             }
             Console.WriteLine("All Test Cases Passed");
-            var finalDocument = ProgramDetailsModelExtension.ConvertIncomingDTOToModel(jsonObject);
+            var dbDocument = await _applicationCosmosService.GetByIdAsync(jsonObject.id);
+            if (dbDocument == null)
+            {
+                await _commonService.SendResponse(HttpStatusCode.BadRequest, "Resource Not Found", response, true);
+                return;
+            }
+            var finalDocument = ProgramDetailsModelExtension.ConvertIncomingDTOToModel(jsonObject,applicationModel: dbDocument);
             Console.WriteLine("Replacing the final document");
-            await _progDetailsCosmos.ReplaceItemAsync(finalDocument);
+            await _applicationCosmosService.ReplaceItemAsync(finalDocument);
             response.StatusCode = (int)HttpStatusCode.OK;
             await Task.CompletedTask;
         }

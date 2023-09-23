@@ -1,5 +1,6 @@
 ﻿using CapitalPlacement.CoreLevel.DTO.WorkflowDTO;
 using CapitalPlacement.CoreLevel.DTO.WorkflowDTO.StagesType.VideoInterviewStage;
+using CapitalPlacement.CoreLevel.Enums;
 using CapitalPlacement.CoreLevel.ServiceContracts;
 using System.Text.Json;
 
@@ -7,6 +8,20 @@ namespace CapitalPlacement.CoreLevel.Services
 {
     public class WorkflowService: IWorkflowService
     {
+        public List<WorkflowStageMapping> GetQuestionTypesList()
+        {
+            List<WorkflowStageMapping> workflowStagesList = new List<WorkflowStageMapping>();
+            foreach (WorkflowStageEnum type in Enum.GetValues(typeof(WorkflowStageEnum)))
+            {
+                workflowStagesList.Add(new WorkflowStageMapping
+                {
+                    Id = (int)type,
+                    Name = type.ToString()
+                });
+            }
+            return workflowStagesList;
+        }
+
         public IncomingWorkflowDTO? GetFinalIncomingDTO(string requestBody)
         {
             JsonDocument jsonDocument = JsonDocument.Parse(requestBody);

@@ -6,18 +6,32 @@ namespace CapitalPlacement.CoreLevel.ModelExtensions.cs
 {
     public static class ProgramDetailsModelExtension
     {
-        public static ProgramDetailsModel ConvertIncomingDTOToModel(this IncomingProgramDetailsDTO dtoObject, bool newDoc=false)
+        public static NewApplicationFormModel ConvertIncomingDTOToModel(this IncomingProgramDetailsDTO dtoObject,
+        bool newDoc=false, NewApplicationFormModel? applicationModel=null)
         {
-            string finalId = dtoObject.id;
-            if (newDoc)
+            if (newDoc && applicationModel == null)
             {
-                finalId = Guid.NewGuid().ToString();
+                string finalId = Guid.NewGuid().ToString();
+                return new NewApplicationFormModel
+                {
+                    id = finalId,
+                    ProgramInfo = dtoObject.ProgramInfo,
+                    AdditionalProgramInfo = dtoObject.AdditionalProgramInfo
+                };
             }
-            return new ProgramDetailsModel
+            applicationModel.ProgramInfo = dtoObject.ProgramInfo;
+            applicationModel.AdditionalProgramInfo = dtoObject.AdditionalProgramInfo;
+            return applicationModel;
+
+        }
+
+        public static IncomingProgramDetailsDTO GetOutgoingProgramDetailsFromModel(this NewApplicationFormModel modelObj)
+        {
+            return new IncomingProgramDetailsDTO
             {
-                id = finalId,
-                ProgramInfo = dtoObject.ProgramInfo,
-                AdditionalProgramInfo = dtoObject.AdditionalProgramInfo
+                id = modelObj.id,
+                ProgramInfo = modelObj.ProgramInfo,
+                AdditionalProgramInfo =modelObj.AdditionalProgramInfo
             };
         }
     }
