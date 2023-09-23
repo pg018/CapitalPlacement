@@ -10,3 +10,20 @@ The architecture I have followed is CLEAN architecture...
 
 For each incoming request, there is a dto (Data Transfer Objects) which brings the data to controller..
 The data undergoes validation processess for each api and then the required operation is performed...
+
+### Commit Number 4 => Task 2 Complete
+
+In the second task, their were four main components => Cover Image, Personal Information, Profile Information and Additional Questions.
+Each of the information sections had an option of additional questions...
+
+Initially during get operation, a list of id and names is sent along with rest of the data..
+The id and names list is for the question type...
+During the put operation, we get the question, id and its related properties...
+We extract the properties of each of the question, validate the object.
+We check for the document id in database if it exists..
+If does not exists, then resource not found error
+If exists, we combine the incoming data and data from database into a new json object and replace it in database.
+
+During get operation, the incoming document id is mapped in database..
+If the id does not exist in database, we send a resource not found error..
+If found, we extract the data that is required for "application form" only and send the data in json format
