@@ -7,15 +7,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-    <Folder Include="CoreLevel\Enums\" />
-    <Folder Include="CoreLevel\Models\" />
-    <Folder Include="CoreLevel\DTO\" />
-    <Folder Include="CoreLevel\CustomValidators\" />
-    <Folder Include="CoreLevel\Services\" />
-    <Folder Include="CoreLevel\ServiceContracts\" />
-    <Folder Include="Infrastructure\" />
-  </ItemGroup>
-
 </Project>
