@@ -1,12 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using CapitalPlacement.CoreLevel.CustomValidators;
 
 namespace CapitalPlacement.CoreLevel.DTO.ApplicationFormDTO.PersonalInfo
 {
     public class AppPersonalInfoItemDTO
     {
-        [Required(ErrorMessage = "Internal Property is Required")]
-        public bool Internal { get; set; }
-        [Required(ErrorMessage = "Hide Property is Required")]
-        public bool Hide {  get; set; }
+        [NonNullValidator("Internal")]
+        public bool? Internal { get; set; }
+        [NonNullValidator("Hide")]
+        public bool? Hide {  get; set; }
     }
 }

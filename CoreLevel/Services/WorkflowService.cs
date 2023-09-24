@@ -11,6 +11,7 @@ namespace CapitalPlacement.CoreLevel.Services
         public List<WorkflowStageMapping> GetQuestionTypesList()
         {
             List<WorkflowStageMapping> workflowStagesList = new List<WorkflowStageMapping>();
+            // iterating over the enum values
             foreach (WorkflowStageEnum type in Enum.GetValues(typeof(WorkflowStageEnum)))
             {
                 workflowStagesList.Add(new WorkflowStageMapping
@@ -32,10 +33,12 @@ namespace CapitalPlacement.CoreLevel.Services
             var finalObject = JsonSerializer.Deserialize<IncomingWorkflowDTO>(requestBody);
             switch (stageTypeId)
             {
-                case 1:
-                case 3:
+                case 1: // shortlisting
+                case 3: // placements
+                    // as these two have no questions, so same as base
                     break;
                 case 2:
+                    // have to parse the questions
                     var questionsListString = stageTypeObj.GetProperty("VideoQuestionsList").ToString();
                     var finalQuestionsList = GetVideoInterviewQuestionsList(questionsListString);
                     finalObject!.StageItem.StageType = new VideoInterviewStageDTO() 
@@ -53,6 +56,7 @@ namespace CapitalPlacement.CoreLevel.Services
             List<VideoInterviewQuestionDTO> finalQuestionsList = new();
             foreach (var question in JsonDocument.Parse(videoQuestionsListString).RootElement.EnumerateArray())
             {
+                // creating an object and filling them by getting the properties
                 VideoInterviewQuestionDTO questionObj = new()
                 {
                     Question = question.GetProperty("Question").GetString(),

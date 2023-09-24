@@ -7,7 +7,7 @@ namespace CapitalPlacement.CoreLevel.DTO.WorkflowDTO
     public class IncomingWorkflowDTO
     {
         [DefaultStringValidator("Document Id")]
-        public string? documentId { get; set; }
+        public string? id { get; set; }
         [ObjectAttributeValidator("Stage")]
         public WorkFlowStageDTO StageItem {  get; set; }
     }

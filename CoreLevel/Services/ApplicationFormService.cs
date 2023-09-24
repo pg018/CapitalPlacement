@@ -1,6 +1,7 @@
 ﻿
 using CapitalPlacement.CoreLevel.DTO.ApplicationFormDTO;
 using CapitalPlacement.CoreLevel.DTO.ApplicationFormDTO.AdditionalQuestions;
+using CapitalPlacement.CoreLevel.DTO.ApplicationFormDTO.PersonalInfo;
 using CapitalPlacement.CoreLevel.Enums;
 using CapitalPlacement.CoreLevel.ServiceContracts;
 using System.Text.Json;
@@ -72,7 +73,7 @@ namespace CapitalPlacement.CoreLevel.Services
             return jsonObject;
         }
 
-        private List<BaseQuestionDTO> GetFinalAdditionalQuestionsList(string additionalQuestionsJson)
+        public List<BaseQuestionDTO> GetFinalAdditionalQuestionsList(string additionalQuestionsJson)
         {
             List<BaseQuestionDTO> finalList = new();
             Console.WriteLine("Starting the parsing of json string to get the questions");
@@ -83,6 +84,11 @@ namespace CapitalPlacement.CoreLevel.Services
                 switch (type)
                 {
                     case 1: // Paragraph
+                    case 2: // shortanswer
+                    case 6: // datetime => Not using the object because the requirement for now is same. Can use the object in future
+                    case 7: // number
+                    case 8: // file upload
+                    case 9: // video question
                         BaseQuestionDTO commonQuestionsDTO = new()
                         {
                             Question = element.GetProperty("Question").GetString(),
@@ -120,44 +126,38 @@ namespace CapitalPlacement.CoreLevel.Services
                         };
                         finalList.Add(multipleChoiceQuestionDTO);
                         break;
-                    case 6: // date
-                        DateQuestionDTO dateQuestionDTO = new()
-                        {
-                            Question = element.GetProperty("Question").GetString(),
-                            Type = type,
-                        };
-                        finalList.Add(dateQuestionDTO);
-                        break;
-                    case 7: // number
-                        NumberQuestionDTO numberQuestionDTO = new()
-                        {
-                            Question = element.GetProperty("Question").GetString(),
-                            Type = type,
-                        };
-                        finalList.Add(numberQuestionDTO);
-                        break;
-                    case 8: // FileUpload
-                        FileUploadQuestionDTO fileUploadQuestionDTO = new()
-                        {
-                            Question = element.GetProperty("Question").GetString(),
-                            Type = type,
-                        };
-                        finalList.Add(fileUploadQuestionDTO);
-                        break;
-                    case 9://Video Question
-                        VideoQuestionDTO videoQuestionDTO = new()
-                        {
-                            Question = element.GetProperty("Question").GetString(),
-                            Type = type,
-                        };
-                        finalList.Add(videoQuestionDTO);
-                        break;
                     default:
                         break;
                 }
             }
-
             return finalList;
+        }
+
+        public JsonDocument GetFinalModelDocument(JsonDocument dbDocument, string jsonObjectString)
+        {
+            AppPersonalInfoItemDTO FirstName = new()
+            {
+                Internal = false,
+                Hide = false,
+            };
+            AppPersonalInfoItemDTO LastName = new()
+            {
+                Internal = false,
+                Hide = false,
+            };
+            AppPersonalInfoItemDTO Email = new()
+            {
+                Internal = false,
+                Hide = false,
+            };
+            var newPropertiesJsonObj = new {
+                FirstName,
+                LastName,
+                Email,
+            };
+            string newPropertiesJsonString = JsonSerializer.Serialize(newPropertiesJsonObj);
+            var updatedJsonDoc = JsonService.UpdateProperties(dbDocument,jsonObjectString);
+            return JsonService.AddPropertiesToJsonDocument(updatedJsonDoc, "PersonalInfo", newPropertiesJsonString);
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using CapitalPlacement.CoreLevel.CustomValidators;
 using CapitalPlacement.CoreLevel.DTO.WorkflowDTO.Stages;
-using System.ComponentModel.DataAnnotations;
 
 namespace CapitalPlacement.CoreLevel.DTO.WorkflowDTO.StagesType
 {

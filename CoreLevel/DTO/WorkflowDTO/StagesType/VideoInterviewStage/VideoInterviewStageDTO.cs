@@ -7,6 +7,7 @@ namespace CapitalPlacement.CoreLevel.DTO.WorkflowDTO.StagesType.VideoInterviewSt
     public class VideoInterviewStageDTO : BaseWorkflowStageTypeDTO
     {
         [ObjectAttributeValidator("Video Questions")]
+        [NonNullValidator("Video Questions")]
         public List<VideoInterviewQuestionDTO> VideoQuestionsList { get; set; }
     }
 }

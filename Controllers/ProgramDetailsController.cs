@@ -3,6 +3,7 @@ using CapitalPlacement.CoreLevel.DTO.ProgramDetailsDTO;
 using CapitalPlacement.CoreLevel.ModelExtensions.cs;
 using CapitalPlacement.CoreLevel.Models;
 using CapitalPlacement.CoreLevel.ServiceContracts;
+using CapitalPlacement.CoreLevel.Services;
 using System.Net;
 using System.Text.Json;
 using System.Web;
@@ -54,6 +55,13 @@ namespace CapitalPlacement.Controllers
                     true);
                 return false;
             }
+            // also validating if program summary is less than 250 words here
+            if (jsonObject.ProgramInfo.ProgramSummary != null && jsonObject.ProgramInfo.ProgramSummary.Trim().Length >= 250)
+            {
+                await _commonService.SendResponse(HttpStatusCode.BadRequest,
+                    "Program Summary must be less than 250 characters", response, true);
+                return false;
+            }
             return true;
         }
 
@@ -76,6 +84,7 @@ namespace CapitalPlacement.Controllers
                 await _commonService.SendResponse(HttpStatusCode.NotFound, "Resource Not Found!", response, true);
                 return;
             }
+            Console.WriteLine("Document Exists in DB");
             // here the outgoing document is same as the model so returning the model itself...
             var finalString = JsonSerializer.Serialize(retrievedDocument.GetOutgoingProgramDetailsFromModel());
             await _commonService.SendResponse(HttpStatusCode.OK, finalString, response);
@@ -99,7 +108,6 @@ namespace CapitalPlacement.Controllers
             }
             Console.WriteLine("All Testing Passed");
             var finalDocument = ProgramDetailsModelExtension.ConvertIncomingDTOToModel(jsonObject, true);
-            Console.WriteLine(finalDocument.id);
             await _applicationCosmosService.CreateItemAsync(finalDocument);
             response.StatusCode = (int)HttpStatusCode.Created;
             await Task.CompletedTask;
@@ -123,15 +131,20 @@ namespace CapitalPlacement.Controllers
                 return; 
             }
             Console.WriteLine("All Test Cases Passed");
-            var dbDocument = await _applicationCosmosService.GetByIdAsync(jsonObject.id);
-            if (dbDocument == null)
+            var documentString = await _applicationCosmosService.ReadItemAsyncString(jsonObject.id);
+            if (documentString == null)
             {
                 await _commonService.SendResponse(HttpStatusCode.BadRequest, "Resource Not Found", response, true);
                 return;
             }
-            var finalDocument = ProgramDetailsModelExtension.ConvertIncomingDTOToModel(jsonObject,applicationModel: dbDocument);
+            // serializing the incoming object
+            string incomingObjString = Newtonsoft.Json.JsonConvert.SerializeObject(jsonObject);
+            // updating the incoming properties in the document from database and returning the updated document
+            var jsonDoc = JsonService.UpdateProperties(JsonDocument.Parse(documentString), incomingObjString);
+            // serializing the final document
+            var finalDocument = JsonService.SerializeJsonDocument(jsonDoc);
             Console.WriteLine("Replacing the final document");
-            await _applicationCosmosService.ReplaceItemAsync(finalDocument);
+            await _applicationCosmosService.ReplaceItemAsyncString(finalDocument, jsonObject.id);
             response.StatusCode = (int)HttpStatusCode.OK;
             await Task.CompletedTask;
         }

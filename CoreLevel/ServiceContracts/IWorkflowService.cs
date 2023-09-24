@@ -9,5 +9,6 @@ namespace CapitalPlacement.CoreLevel.ServiceContracts
         public IncomingWorkflowDTO? GetFinalIncomingDTO(string requestBody);
 
         public List<WorkflowStageMapping> GetQuestionTypesList();
+
     }
 }

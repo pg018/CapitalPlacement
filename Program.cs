@@ -38,6 +38,7 @@ var builder = Host.CreateDefaultBuilder(args)
         services.AddScoped<ProgramDetailsController>();
         services.AddScoped<AppFormController>();
         services.AddScoped<WorkflowController>();
+        services.AddScoped<PreviewController>();
     });
 
 var host = builder.Build();
@@ -46,7 +47,7 @@ var listener = new HttpListener();
 listener.Prefixes.Add("http://localhost:5000/");
 listener.Start();
 
-Console.Write("Listening to Incoming Requests...");
+Console.WriteLine("Listening to Incoming Requests...");
 
 while (true)
 {
@@ -73,6 +74,15 @@ while (true)
                 Console.WriteLine("Entering Workflow Controller");
                 var workflowController = host.Services.GetRequiredService<WorkflowController>();
                 await workflowController.HandleRequest(request, response);
+                break;
+            case "/preview":
+                Console.WriteLine("Entering Preview Controller");
+                var previewController = host.Services.GetRequiredService<PreviewController>();
+                await previewController.HandleRequest(request, response);
+                break;
+            default:
+                Console.WriteLine("Invalid Request Hit");
+                await _commonService.SendResponse(HttpStatusCode.NotFound, "Resource Not Found", response, true);
                 break;
         }
     }

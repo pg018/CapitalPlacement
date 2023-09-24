@@ -1,42 +1,63 @@
 ﻿using CapitalPlacement.CoreLevel.DTO.WorkflowDTO;
-using CapitalPlacement.CoreLevel.Models;
-using CapitalPlacement.CoreLevel.Models.AppInfoAllModel;
 using CapitalPlacement.CoreLevel.Models.WorkflowAllModel;
+using CapitalPlacement.CoreLevel.Services;
+using System.Text.Json;
 
 namespace CapitalPlacement.CoreLevel.ModelExtensions.cs
 {
     public static class WorkflowExtensions
     {
-        public static NewApplicationFormModel ConvertDTOToModel(this IncomingWorkflowDTO dtoObject, NewApplicationFormModel prevWorkFlowModel)
+        public static string ConvertDTOToModelString(this IncomingWorkflowDTO dtoObject, string dbString)
         {
-            var finalList = prevWorkFlowModel.WorkflowStages;
-            var listCount = 0;
-            if (finalList != null)
+            JsonDocument document = JsonDocument.Parse(dbString);
+            // getting the list of workflow stages
+            var workflowStagesElement = document.RootElement.GetProperty("WorkflowStages").ToString();
+            var workflowList = new List<object>();
+            if (workflowStagesElement != string.Empty)
             {
-                listCount = finalList.Count;
-            } else
-            {
-                finalList = new List<WorkflowSingleStageModel>();
+                foreach (var element in JsonDocument.Parse(workflowStagesElement).RootElement.EnumerateArray())
+                {
+                    // parsing them and adding in the list
+                    workflowList.Add(Newtonsoft.Json.JsonConvert.DeserializeObject(element.ToString()));
+                }
             }
             WorkflowSingleStageModel newStage = new()
             {
                 StageName = dtoObject.StageItem.StageName,
                 StageType = dtoObject.StageItem.StageType,
                 HideFromCandidate = dtoObject.StageItem.HideFromCandidate,
-                Order = listCount + 1,
+                Order = workflowList.Count + 1,
             };
-            finalList.Add(newStage);
-            prevWorkFlowModel.WorkflowStages = finalList;
-            return prevWorkFlowModel;
+            // adding the new stage
+            workflowList.Add(newStage);
+            var serializedWorkflowList = Newtonsoft.Json.JsonConvert.SerializeObject(workflowList);
+            // updating the existing workflowStages list with new list
+            var finalDoc = JsonService.UpdateExistingProperty(
+                document, "WorkflowStages", serializedWorkflowList);
+            return JsonService.SerializeJsonDocument(finalDoc);
         }
 
-        public static OutgoingWorkflowDTO GetOutgoingWorkflowFromModel(this NewApplicationFormModel modelObj)
+        public static OutgoingWorkflowDTO GetOutgoingWorkflowFromModel(string cosmosString)
         {
+            JsonDocument document = JsonDocument.Parse(cosmosString);
+            // getting the id property
+            var id = document.RootElement.GetProperty("id").GetString();
+            JsonElement workflowStagesListElement;
+            // getting the workflow stages list
+            document.RootElement.TryGetProperty("WorkflowStages", out workflowStagesListElement);
+            string workflowElementString = workflowStagesListElement.ToString();
+            object? workflowList = null;
+            if (workflowElementString != string.Empty)
+            {
+                // if workflow list exists in document we deserialize it
+                workflowList = JsonSerializer.Deserialize<dynamic>(workflowElementString);
+            }
             return new OutgoingWorkflowDTO
             {
-                documentId = modelObj.id,
-                StageList = modelObj.WorkflowStages
+                documentId = id,
+                StageList = workflowList,
             };
         }
+
     }
 }

@@ -52,16 +52,18 @@ namespace CapitalPlacement.Controllers
                 await _commonService.SendResponse(HttpStatusCode.BadRequest, "Invalid Id!", response, true);
                 return;
             }
-            var retrievedDocument = await _applicationCosmosService.GetByIdAsync(documentId);
-            if (retrievedDocument == null)
+            string? documentString = await _applicationCosmosService.ReadItemAsyncString(documentId);
+            if (documentString == null)
             {
                 // no such document exists
                 await _commonService.SendResponse(HttpStatusCode.NotFound, "Resource Not Found!", response, true);
                 return;
             }
             var workflowStagesTypes = _workflowService.GetQuestionTypesList();
-            var finalDocument = retrievedDocument.GetOutgoingWorkflowFromModel();
+            // getting the final document which contains the required properties only
+            var finalDocument = WorkflowExtensions.GetOutgoingWorkflowFromModel(documentString);
             finalDocument.WorkflowStageTypes = workflowStagesTypes;
+            // serializing to string
             var finalString = JsonSerializer.Serialize(finalDocument);
             await _commonService.SendResponse(HttpStatusCode.OK, finalString, response, false);
         }
@@ -70,7 +72,6 @@ namespace CapitalPlacement.Controllers
         {
             using var reader = new StreamReader(request.InputStream);
             var requestBody = await reader.ReadToEndAsync();
-            Console.WriteLine($"{requestBody}");
             var finalIncomingObject = _workflowService.GetFinalIncomingDTO(requestBody);
             if (!await _commonService.ValidateObject<IncomingWorkflowDTO>(finalIncomingObject, response)
                 || finalIncomingObject == null
@@ -78,14 +79,17 @@ namespace CapitalPlacement.Controllers
             {
                 return;
             }
-            var dbDocument = await _applicationCosmosService.GetByIdAsync(finalIncomingObject.documentId);
-            if (dbDocument == null)
+            // checking and getting the document for the given document id
+            var documentString = await _applicationCosmosService.ReadItemAsyncString(finalIncomingObject.id);
+            if (documentString == null)
             {
                 await _commonService.SendResponse(HttpStatusCode.NotFound, "Resource Not Found", response, true);
                 return;
             }
-            var finalDocument = finalIncomingObject.ConvertDTOToModel(dbDocument);
-            await _applicationCosmosService.ReplaceItemAsync(finalDocument);
+            // documentString is updated with the properties coming from finalIncomingObject and gives out the finalDocument
+            var finalDocument = finalIncomingObject.ConvertDTOToModelString(documentString);
+            // replacing the document in database
+            await _applicationCosmosService.ReplaceItemAsyncString(finalDocument, finalIncomingObject.id);
             await Task.CompletedTask;
         }
     }

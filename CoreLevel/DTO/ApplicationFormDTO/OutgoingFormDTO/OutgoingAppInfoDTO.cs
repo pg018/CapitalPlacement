@@ -1,5 +1,4 @@
 ﻿using CapitalPlacement.CoreLevel.Enums;
-using CapitalPlacement.CoreLevel.Models.AppInfoAllModel;
 
 namespace CapitalPlacement.CoreLevel.DTO.ApplicationFormDTO.OutgoingFormDTO
 {

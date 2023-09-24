@@ -1,55 +1,40 @@
-﻿
-using CapitalPlacement.CoreLevel.DTO.ApplicationFormDTO;
-using CapitalPlacement.CoreLevel.DTO.ApplicationFormDTO.OutgoingFormDTO;
-using CapitalPlacement.CoreLevel.DTO.ApplicationFormDTO.PersonalInfo;
-using CapitalPlacement.CoreLevel.Enums;
-using CapitalPlacement.CoreLevel.Models;
-using CapitalPlacement.CoreLevel.Models.AppInfoAllModel;
+﻿using CapitalPlacement.CoreLevel.DTO.ApplicationFormDTO.OutgoingFormDTO;
+using System.Text.Json;
 
 namespace CapitalPlacement.CoreLevel.ModelExtensions.cs
 {
     public static class AppInfoModelExtension
     {
-        public static NewApplicationFormModel ConvertDTOToModel(
-            this IncomingAppInfoDTO dtoObject,
-            NewApplicationFormModel applicationModel)
-        {
-            AppPersonalInfoModel finalPersonalObj = new AppPersonalInfoModel
-            {
-                FirstName = new AppPersonalInfoItemDTO { Internal = true, Hide = false },
-                LastName = new AppPersonalInfoItemDTO { Internal = true, Hide = false },
-                Email = new AppPersonalInfoItemDTO { Internal = true, Hide = false },
-                PhoneNumber = dtoObject.PersonalInfo.PhoneNumber,
-                Nationality = dtoObject.PersonalInfo.Nationality,
-                CurrentResidence = dtoObject.PersonalInfo.CurrentResidence,
-                IdNumber = dtoObject.PersonalInfo.IdNumber,
-                DateOfBirth = dtoObject.PersonalInfo.DateOfBirth,
-                Gender = dtoObject.PersonalInfo.Gender,
-                AdditionalQuestions = dtoObject.PersonalInfo.AdditionalQuestions,
-            };
-            applicationModel.CoverImage = dtoObject.CoverImage;
-            applicationModel.PersonalInfo = finalPersonalObj;
-            applicationModel.ProfileInfo = dtoObject.ProfileInfo;
-            applicationModel.AdditionalQuestions = dtoObject.AdditionalQuestions;
-
-            return applicationModel;
-        }
-
         public static OutgoingAppInfoDTO ConvertModelToOutgoingAppInfo(
-            this NewApplicationFormModel modelObj,
-            List<QuestionTypeMapping> questionTypes)
+            string dbString)
         {
-            
+            JsonDocument document = JsonDocument.Parse(dbString);
+            object? personalInfoObj = null, profileInfoObj = null, additionalQEl = new List<object>();
+            string coverImageElementString = document.RootElement.GetProperty("CoverImage").ToString();
+            string personalInfoElementString = document.RootElement.GetProperty("PersonalInfo").ToString();
+            string profileInfoElementString = document.RootElement.GetProperty("ProfileInfo").ToString();
+            string addQuestionsElementString = document.RootElement.GetProperty("AdditionalQuestions").ToString();
+            if (personalInfoElementString != string.Empty)
+            {
+                personalInfoObj = JsonSerializer.Deserialize<dynamic>(personalInfoElementString);
+            }
+            if (personalInfoElementString != string.Empty)
+            {
+                profileInfoObj = JsonSerializer.Deserialize<dynamic>(profileInfoElementString);
+            }
+            if (addQuestionsElementString != string.Empty)
+            {
+                additionalQEl = JsonSerializer.Deserialize<dynamic>(addQuestionsElementString);
+            }
             return new OutgoingAppInfoDTO
             {
-                QuestionTypes = questionTypes,
                 AppInfo = new OutgoingFormData
                 {
-                    id = modelObj.id,
-                    PersonalInfo = modelObj.PersonalInfo,
-                    ProfileInfo = modelObj.ProfileInfo,
-                    CoverImage = modelObj.CoverImage,
-                    AdditionalQuestions = modelObj.AdditionalQuestions,
+                    id = document.RootElement.GetProperty("id").GetString(), // id exists by default
+                    PersonalInfo = personalInfoObj,
+                    ProfileInfo = profileInfoObj,
+                    CoverImage = coverImageElementString,
+                    AdditionalQuestions = additionalQEl,
                 }
             };
         }

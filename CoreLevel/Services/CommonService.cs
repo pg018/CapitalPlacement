@@ -24,13 +24,13 @@ namespace CapitalPlacement.CoreLevel.Services
             };
         }
 
+        // Used to send the final response to the user....
         public async Task SendResponse(
             HttpStatusCode statusCode,
             string message,
             HttpListenerResponse responseObj,
             bool isError=false)
         {
-            // Used to send the final response to the user....
             string finalMessage = message;
             if (isError)
             {
@@ -62,5 +62,6 @@ namespace CapitalPlacement.CoreLevel.Services
             }
             return true;
         }
+
     }
 }

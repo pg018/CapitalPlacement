@@ -2,8 +2,8 @@
 using CapitalPlacement.CoreLevel.DTO.ApplicationFormDTO;
 using CapitalPlacement.CoreLevel.ModelExtensions.cs;
 using CapitalPlacement.CoreLevel.Models;
-using CapitalPlacement.CoreLevel.Models.AppInfoAllModel;
 using CapitalPlacement.CoreLevel.ServiceContracts;
+using CapitalPlacement.CoreLevel.Services;
 using System.Net;
 using System.Text.Json;
 using System.Web;
@@ -53,19 +53,19 @@ namespace CapitalPlacement.Controllers
                 await _commonService.SendResponse(HttpStatusCode.BadRequest, "Invalid Id!", response, true);
                 return;
             }
-            var retrievedDocument = await _applicationCosmosService.GetByIdAsync(documentId);
-            if (retrievedDocument == null)
+            string? documentString = await _applicationCosmosService.ReadItemAsyncString(documentId);
+            if (documentString == null)
             {
                 // no such document exists
                 await _commonService.SendResponse(HttpStatusCode.NotFound, "Resource Not Found!", response, true);
                 return;
             }
-
+            Console.WriteLine("Document Exists in DB");
             // sending the data that is required for application form only
             var questionTypeList = _applicationFormService.GetQuestionTypesList();
-            var finalDocument = AppInfoModelExtension.ConvertModelToOutgoingAppInfo(retrievedDocument, questionTypeList);
+            var finalDocument = AppInfoModelExtension.ConvertModelToOutgoingAppInfo(documentString);
+            finalDocument.QuestionTypes = questionTypeList;
 
-            // here the outgoing document is same as the model so returning the model itself...
             var finalString = JsonSerializer.Serialize(finalDocument);
             await _commonService.SendResponse(HttpStatusCode.OK, finalString, response);
             await Task.CompletedTask;
@@ -73,7 +73,7 @@ namespace CapitalPlacement.Controllers
 
         private async Task HandlePut(HttpListenerRequest request, HttpListenerResponse response)
         {
-            Console.WriteLine("Running the Post Function");
+            Console.WriteLine("Running the Put Function");
             using var reader = new StreamReader(request.InputStream);
             var requestBody = await reader.ReadToEndAsync();
             Console.WriteLine(requestBody);
@@ -85,15 +85,23 @@ namespace CapitalPlacement.Controllers
             }
             Console.WriteLine("All Testing Passed");
             // retrieving the document if there in db
-            var dbDocument = await _applicationCosmosService.GetByIdAsync(jsonObject.id);
-            if (dbDocument == null)
+            string? documentString = await _applicationCosmosService.ReadItemAsyncString(jsonObject.id);
+            if (documentString == null)
             {
-                // document does not exist... Someone must have tampered with id in frontend
-                await _commonService.SendResponse(HttpStatusCode.NotFound, "Resource Not Found", response, true);
+                // no such document exists
+                await _commonService.SendResponse(HttpStatusCode.NotFound, "Resource Not Found!", response, true);
                 return;
             }
-            var finalDocument = AppInfoModelExtension.ConvertDTOToModel(jsonObject, dbDocument);
-            await _applicationCosmosService.ReplaceItemAsync(finalDocument);
+            // database string document parsed to jsonDocument
+            var jsonDoc = JsonDocument.Parse(documentString);
+            // the incoming object is serialized to string
+            var jsonObjectString = Newtonsoft.Json.JsonConvert.SerializeObject(jsonObject);
+            // the properties are updated in the jsonDoc and finally returns an updated Json Document
+            var finalJsonDoc = _applicationFormService.GetFinalModelDocument(jsonDoc, jsonObjectString);            
+            // final JsonDocument serialized to string
+            var finalDocString = JsonService.SerializeJsonDocument(finalJsonDoc);
+            // replacing the document in the database with updated one
+            await _applicationCosmosService.ReplaceItemAsyncString(finalDocString, jsonObject.id);
             await Task.CompletedTask;
         }
     }

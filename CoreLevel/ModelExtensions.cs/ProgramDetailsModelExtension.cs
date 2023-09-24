@@ -12,6 +12,7 @@ namespace CapitalPlacement.CoreLevel.ModelExtensions.cs
             if (newDoc && applicationModel == null)
             {
                 string finalId = Guid.NewGuid().ToString();
+                // creating a new object with all properties initialized
                 return new NewApplicationFormModel
                 {
                     id = finalId,

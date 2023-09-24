@@ -1,3 +1,46 @@
+### Properties For Each Tab
+
+#### Tab 1 => Program Details 
+##### (POST/PUT)
+string id => required
+object ProgramInfo => required
+object AdditionalProgramInfo => required
+##### (GET)
+Input => id as query
+Output => Same as the POST/PUT input
+
+#### Tab 2 => Application Form 
+##### (PUT)
+string id => required
+string CoverImage => required
+object PersonalInfo => required
+object ProfileInfo => required
+list AdditionalQuestions => optional
+##### (GET)
+Input => id as query
+Output => Same as the PUT Input
+
+#### Tab 3 => Workflow
+##### (PUT)
+string id => required
+object StageItem => required
+##### (GET)
+Input => id as query
+Output => list of stages
+
+#### Tab 4 => Preview
+##### (GET)
+Input => id as query
+Output => all the data
+
+Program.cs is the root file..
+
+Endpoints Are:
+http://localhost:5000/programdetails (GET/POST/PUT)
+Http://localhost:5000/applicationform (GET/PUT)
+http://localhost:5000/workflow (GET/PUT)
+http://localhost:5000/preview (GET)
+
 ### Commit Number 3 => First Task Done, Second Task In Progress...
 
 In the first task, I set up the directory structure which included controllers, core level, infrastructure as top level

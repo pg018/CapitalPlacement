@@ -11,6 +11,7 @@ namespace CapitalPlacement.CoreLevel.CustomValidators
 
         public ObjectAttributeValidator(string propertyName, bool nullValueAllowed=false)
         {
+            // null value allowed means the properties under the object or the object is not mandatory
             _nullValueAllowed = nullValueAllowed;
             PropertyName = propertyName;
         }
